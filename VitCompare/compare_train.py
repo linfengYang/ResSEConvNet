@@ -21,7 +21,7 @@ from models import *
 from utils import progress_bar
 from randomaug import RandAugment
 from models.vit import ViT
-from models.ConvNext_test import convnext_tiny
+from models.ConvNext import convnext_tiny
 
 from torchvision import transforms
 from my_dataset import MyDataSet
