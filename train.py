@@ -24,16 +24,13 @@ def main(args):
 
     train_images_path, train_images_label, val_images_path, val_images_label = read_split_data(args.data_path)
 
-    img_size = 64  # 56  64  # 224   # ------------
+    img_size = 64
     data_transform = {
-        "train": transforms.Compose([#transforms.RandomResizedCrop(img_size),  # ---------
-                                     transforms.Resize(img_size),
-                                     # transforms.RandomHorizontalFlip(), # ---------
+        "train": transforms.Compose([transforms.Resize(img_size),
                                      transforms.ToTensor(),
-                                     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])  # GAF每个像素值在[-1,1]之间，不再进行归一化
+                                     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                      ]),
-        "val": transforms.Compose([# transforms.Resize(int(img_size * 1.143)),
-                                   #transforms.CenterCrop(img_size),  # 没必要吧？
+        "val": transforms.Compose([
                                    transforms.Resize(img_size),
                                    transforms.ToTensor(),
                                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -100,7 +97,7 @@ def main(args):
                                                 device=device,
                                                 epoch=epoch,
                                                 lr_scheduler=lr_scheduler)
-        filename1 = '0720result/train_acc.csv'
+        filename1 = 'result/train_acc.csv'
         train_acc_row = train_acc
         with open(filename1, 'a', newline='') as file:
             writer = csv.writer(file)
@@ -110,7 +107,7 @@ def main(args):
                                      data_loader=val_loader,
                                      device=device,
                                      epoch=epoch)
-        filename2 = '0720result/val_acc.csv'
+        filename2 = 'result/val_acc.csv'
         val_acc_row = val_acc
         with open(filename2, 'a', newline='') as file:
             writer = csv.writer(file)
@@ -143,20 +140,18 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--num_classes', type=int, default=11) # --------
-    parser.add_argument('--epochs', type=int, default=130)  # ------------
-    parser.add_argument('--batch-size', type=int, default=16)  # 8----------32 for ConvNext   28 for test
-    parser.add_argument('--lr', type=float, default=8e-4)  # 8e-4------------
+    parser.add_argument('--num_classes', type=int, default=11) 
+    parser.add_argument('--epochs', type=int, default=130)  
+    parser.add_argument('--batch-size', type=int, default=16)  
+    parser.add_argument('--lr', type=float, default=8e-4)  
     parser.add_argument('--wd', type=float, default=5e-2)
 
     # 数据集所在根目录
-    # https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz
     parser.add_argument('--data-path', type=str,
-                        default="vmdwpt_db6_L3_imif_DJX_0912/")  # vmdwpt_db6_L3_m_0818  vmdwpt_db6_L3_imif_0817  MDF_wpt MDF_ivif_S50  0807_K4_m3 AMDF_721_S250  I_MDF_721_S50 If_MDF_721_S50  AMDF_716_Min_P  AMDF_716_Only_Min  AMDF_716_P_Min AMDF_710  2017Binary_VI  AMDF_77  I_MDF_77   AGG/GAF/  MDF_original  MDF_update  GAF---MDF----MTF---RP----GAFMTF-------MDF_---
+                        default="the dataset path/")  
 
     # 预训练权重路径，如果不想载入就设置为空字符
-    # 链接: https://pan.baidu.com/s/1aNqQW4n_RrUlWUBNlaJRHA  密码: i83t
-    parser.add_argument('--weights', type=str, default='', # './convnext_tiny_1k_224_ema.pth'
+    parser.add_argument('--weights', type=str, default='',
                         help='initial weights path')
     # 是否冻结head以外所有权重
     parser.add_argument('--freeze-layers', type=bool, default=False)
