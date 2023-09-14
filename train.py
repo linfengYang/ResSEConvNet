@@ -7,7 +7,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 import pandas as pd
 from my_dataset import MyDataSet
-from ResSEConvNet import convnext_tiny as create_model
+from ResSEConvNet import model_architecture as get_model
 from utils import read_split_data, create_lr_scheduler, get_params_groups, train_one_epoch, evaluate
 
 
