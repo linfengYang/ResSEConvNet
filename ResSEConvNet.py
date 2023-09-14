@@ -76,14 +76,12 @@ class Block(nn.Module):
     def __init__(self, dim, drop_rate=0., layer_scale_init_value=1e-6):
         super().__init__()
         self.conv = nn.Conv2d(dim, dim, kernel_size=3, padding=1)  # depthwise conv
-        # self.norm = LayerNorm(dim, eps=1e-6, data_format="channels_first")
         self.act = nn.GELU()
         self.bn = nn.BatchNorm2d(dim)
         self.drop_path = DropPath(drop_rate) if drop_rate > 0. else nn.Identity()
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         shortcut = x
-        x = self.conv(x)  # torch.Size([8, 36, 62, 62])  [N, C, H, W]
-        # print('x.shape:',x.shape)
+        x = self.conv(x)  
         x = self.bn(x)
         x = self.act(x)
         
@@ -92,13 +90,12 @@ class Block(nn.Module):
 
 class DWConv(nn.Module):
     def __init__(self, c1, c2, k=3, s=1, p=1, g=1, act=True):  # ch_in, ch_out, kernel, stride, padding, groups
-        super().__init__() # 组卷积和点卷积联合实现深度可分离卷积
-        self.conv1 = nn.Conv2d(c1, c1, k, s, p, groups=c1)  # , bias=False
-        # self.conv2 = nn.Conv2d(c1, c2, 1, 1, 0, groups=1)  # , bias=False -----是否可以去掉？------
+        super().__init__() 
+        self.conv1 = nn.Conv2d(c1, c1, k, s, p, groups=c1)  
         self.bn = nn.BatchNorm2d(c2)
-        self.act = nn.GELU() # nn.ReLU() # nn.GELU()
+        self.act = nn.GELU() 
     def forward(self, x):
-        return self.bn(self.act(self.conv1(x))) # self.act(self.bn(self.conv2(self.conv1(x))))
+        return self.bn(self.act(self.conv1(x))) 
 
 class DownsampleLayers(nn.Module):
 
@@ -116,7 +113,6 @@ class DownsampleLayers(nn.Module):
             nn.Conv2d(c1, int(1.5*(c2-c1)), 1, 1, 1),
             nn.GELU(),
             nn.BatchNorm2d(int(1.5*(c2-c1)))
-
         )
 
         self.conv1 = nn.Sequential(
@@ -143,18 +139,6 @@ class DownsampleLayers(nn.Module):
         return x
 
 class ConvNeXt(nn.Module):
-    r""" ConvNeXt
-        A PyTorch impl of : `A ConvNet for the 2020s`  -
-          https://arxiv.org/pdf/2201.03545.pdf
-    Args:
-        in_chans (int): Number of input image channels. Default: 3
-        num_classes (int): Number of classes for classification head. Default: 1000
-        depths (tuple(int)): Number of blocks at each stage. Default: [3, 3, 9, 3]
-        dims (int): Feature dimension at each stage. Default: [96, 192, 384, 768]
-        drop_path_rate (float): Stochastic depth rate. Default: 0.
-        layer_scale_init_value (float): Init value for Layer Scale. Default: 1e-6.
-        head_init_scale (float): Init scaling value for classifier weights and biases. Default: 1.
-    """
     def __init__(self, in_chans: int = 3, num_classes: int = 1000, depths: list = None,
                  dims: list = None, drop_path_rate: float = 0., layer_scale_init_value: float = 1e-6,
                  head_init_scale: float = 1.):
