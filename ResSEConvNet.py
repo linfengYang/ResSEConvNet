@@ -138,7 +138,7 @@ class DownsampleLayers(nn.Module):
         x = self.conv3(self.conv2(x + b))
         return x
 
-class ConvNeXt(nn.Module):
+class get_model(nn.Module):
     def __init__(self, in_chans: int = 3, num_classes: int = 1000, depths: list = None,
                  dims: list = None, drop_path_rate: float = 0., layer_scale_init_value: float = 1e-6,
                  head_init_scale: float = 1.):
@@ -185,18 +185,12 @@ class ConvNeXt(nn.Module):
         x = self.head(x)
         return x
 
-def convnext_tiny(num_classes: int):
-    model = ConvNeXt(depths=[1, 1, 3, 1], 
+def model_architecture(num_classes: int):
+    model = get_model(depths=[1, 1, 3, 1], 
                      dims= [72, 144, 288,576], 
                      num_classes=num_classes)
     return model
 
-
-def convnext_small(num_classes: int):
-    model = ConvNeXt(depths=[3, 3, 27, 3],
-                     dims=[96, 192, 384, 768],
-                     num_classes=num_classes)
-    return model
 
 
 
