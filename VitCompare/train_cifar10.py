@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-'''
-
-Train CIFAR10 with PyTorch and Vision Transformers!
-written by @kentaroy47, @arutema47
-
-'''
-
 from __future__ import print_function
 
 import torch
@@ -30,25 +22,24 @@ from utils import progress_bar
 from randomaug import RandAugment
 from models.vit import ViT
 from models.convmixer import ConvMixer
-# from models.ConvNext import convnext_tiny
 from models.ConvNext_test import convnext_tiny
 
 from torchvision import transforms
 from my_dataset import MyDataSet
-from utils_ConvNext import read_split_data, create_lr_scheduler, get_params_groups, train_one_epoch, evaluate
+from utils_training import read_split_data, create_lr_scheduler, get_params_groups, train_one_epoch, evaluate
 # parsers
-parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
-parser.add_argument('--lr', default=1e-4, type=float, help='learning rate') #  8e-4  resnets.. 1e-3, Vit..1e-4
+parser = argparse.ArgumentParser(description='PyTorch PLAID or WHITED Training')
+parser.add_argument('--lr', default=1e-4, type=float, help='learning rate')
 parser.add_argument('--opt', default="adam")
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
 parser.add_argument('--noaug', action='store_true', help='disable use randomaug')
 parser.add_argument('--noamp', action='store_true', help='disable mixed precision training. for older pytorch versions')
 # parser.add_argument('--nowandb', action='store_true', help='disable wandb')
 parser.add_argument('--mixup', action='store_true', help='add mixup augumentations')
-parser.add_argument('--net', default='mlpmixer')  # swin vit_tiny vit_small cait_small convmixer ConvNext_test--------
-parser.add_argument('--bs', default='16') # 32 for convmixer;
-parser.add_argument('--size', default="64") # 32-------
-parser.add_argument('--n_epochs', type=int, default='200') # 200
+parser.add_argument('--net', default='mlpmixer')  # swin vit_tiny vit_small cait_small ConvNext_test--------
+parser.add_argument('--bs', default='16') 
+parser.add_argument('--size', default="64")
+parser.add_argument('--n_epochs', type=int, default='200') 
 parser.add_argument('--patch', default='4', type=int, help="patch for ViT")
 parser.add_argument('--dimhead', default="512", type=int)
 parser.add_argument('--convkernel', default='8', type=int, help="parameter for convmixer")
@@ -80,55 +71,19 @@ if args.net=="vit_timm":
     size = 384
 else:
     size = imsize
-# Prepare dataset
-# --------old preprocessing---------
-# transform_train = transforms.Compose([
-#     transforms.RandomCrop(64, padding=4), # 32
-#     transforms.Resize(size),
-#     transforms.RandomHorizontalFlip(),
-#     transforms.ToTensor(),
-#     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-# ])
 
-# transform_test = transforms.Compose([
-#     transforms.Resize(size),
-#     transforms.ToTensor(),
-#     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-# ])
 
-# # Add RandAugment with N, M(hyperparameter)
-# if aug:  
-#     N = 2; M = 14;
-#     transform_train.transforms.insert(0, RandAugment(N, M))
-
-# from torchvision import datasets, transforms
-# from sklearn.model_selection import train_test_split
-# # transform = transforms.Compose([
-# #     transforms.Resize((64, 64)),
-# #     transforms.ToTensor()
-# # ])
-# data_path ='/content/drive/MyDrive/Vit/vision-transformers-cifar10-main/vision-transformers-cifar10-main/data/app_GAF/'
-# trainset = datasets.ImageFolder(data_path+'train', transform=transform_train)
-# testset = datasets.ImageFolder(data_path+'val', transform=transform_test)
-# # train_dataset = torch.utils.data.TensorDataset(x, y)  # 对给定的 tensor 数据，将他们包装成 dataset
-# trainloader = torch.utils.data.DataLoader(trainset, batch_size=bs, shuffle=True, num_workers=1)
-# testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
-# --------old preprocessing---------
-
-# !!!-----new preprocessing----------
-data_path ='../vmdwpt_db6_L3_imif_DJX_0913/'  # vmdwpt_db6_L3_imif_0817  GAF   MTF  MDF  RP  
+# -----data preprocessing----------
+data_path ='../data path/'
 train_images_path, train_images_label, val_images_path, val_images_label = read_split_data(data_path)
 
-img_size = 64  # 224   # ------------
+img_size = 64 
 data_transform = {
-    "train": transforms.Compose([#transforms.RandomResizedCrop(img_size),  # ---------
-                  transforms.Resize(img_size),
-                  # transforms.RandomHorizontalFlip(), # ---------
+    "train": transforms.Compose([transforms.Resize(img_size),
                   transforms.ToTensor(),
-                  transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])  # GAF每个像素值在[-1,1]之间，不再进行归一化
+                  transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]) 
                   ]),
-    "val": transforms.Compose([# transforms.Resize(int(img_size * 1.143)),
-                  #transforms.CenterCrop(img_size),  # 没必要吧？
+    "val": transforms.Compose([
                   transforms.Resize(img_size),
                   transforms.ToTensor(),
                   transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -159,7 +114,7 @@ testloader = torch.utils.data.DataLoader(val_dataset,
                       pin_memory=True,
                       num_workers=nw,
                       collate_fn=val_dataset.collate_fn)
-# !!!---------------
+# ---------------
 
 
 # Model factory..
@@ -189,17 +144,6 @@ elif args.net == "ConvNext_test":
 elif args.net == "ConvNext":
     print('------------------------welcome ConvNext!------------------------')
     net = convnext_tiny(num_classes=11)
-elif args.net=="mlpmixer":
-    print('------------------------welcome mlpmixer!------------------------')
-    from models.mlpmixer import MLPMixer
-    net = MLPMixer(
-    image_size = size,
-    channels = 3,
-    patch_size =  8, # args.patch,
-    dim = 512,
-    depth = 6,
-    num_classes = 11  # ---------
-)
 elif args.net=="vit_small":
     from models.vit_small import ViT
     print('------------------------welcome vit_small!------------------------')
