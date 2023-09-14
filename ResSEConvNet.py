@@ -1,8 +1,3 @@
-"""
-original code from facebook research:
-https://github.com/facebookresearch/ConvNeXt
-"""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -111,38 +106,30 @@ class DownsampleLayers(nn.Module):
         super().__init__()
         self.ch1 = nn.Sequential(
             nn.AdaptiveAvgPool2d((1, 1)),
-            # nn.Linear(c1, c1 // 2),  # , bias=False
-            # nn.ReLU(inplace=True),
-            # nn.Linear(c1 // 2, c1),  #, bias=False
-            # nn.Sigmoid()
-            nn.Conv2d(c1, c1 // 2, 1, 1, 0),  # 1x1conv，替代linear
+            nn.Conv2d(c1, c1 // 2, 1, 1, 0), 
             nn.ReLU(),
-            nn.Conv2d(c1 // 2, c1, 1, 1, 0),  # 1x1conv，替代linear
+            nn.Conv2d(c1 // 2, c1, 1, 1, 0),
             nn.Sigmoid()
         )
         self.ch2 = nn.Sequential(
             DWConv(c1, c1, k=3),
-            nn.Conv2d(c1, int(1.5*(c2-c1)), 1, 1, 1),  # (c1, 1.5*(c2-c1), 1, 1, 1)
+            nn.Conv2d(c1, int(1.5*(c2-c1)), 1, 1, 1),
             nn.GELU(),
             nn.BatchNorm2d(int(1.5*(c2-c1)))
 
         )
-        # self.conv1 = nn.Conv2d(c1, c1, 1, 1, 1)  # (c1, 1.5*(c2-c1), 1, 1, 1)
-        # self.conv2 = nn.Conv2d(c1, c2, 1, 1, 1)  # (1.5*(c2-c1),c2, 1, 1, 1)
-        # self.conv3 = nn.Conv2d(c2, c2, 3, 1, 2)  # (c2, c2, 3, 2, 1) ?---
 
         self.conv1 = nn.Sequential(
-            nn.Conv2d(c1, int(1.5*(c2-c1)), 1, 1, 1), #  (c1, c1, 1, 1, 1)  (c1, 1.5*(c2-c1), 1, 1, 1)
-            # nn.GELU(),   # 0809测试添加是否有效-----------------
+            nn.Conv2d(c1, int(1.5*(c2-c1)), 1, 1, 1),
             nn.BatchNorm2d(int(1.5*(c2-c1)))
         )
         self.conv2 = nn.Sequential(
-            nn.Conv2d(int(1.5*(c2-c1)),c2, 1, 1, 1), #  (c1, c2, 1, 1, 1)  (1.5*(c2-c1),c2, 1, 1, 1)
+            nn.Conv2d(int(1.5*(c2-c1)),c2, 1, 1, 1), 
             nn.GELU(),
             nn.BatchNorm2d(c2)
         )
-        self.conv3 = nn.Sequential(  # 试试不经过这个卷积？（最后两层只用一个卷积）
-            nn.Conv2d(c2, c2, 3, 2, 1), # (c2, c2, 3, 2, 1) ?---
+        self.conv3 = nn.Sequential( 
+            nn.Conv2d(c2, c2, 3, 2, 1), 
             nn.GELU(),
             nn.BatchNorm2d(c2)
         )
@@ -172,19 +159,17 @@ class ConvNeXt(nn.Module):
                  dims: list = None, drop_path_rate: float = 0., layer_scale_init_value: float = 1e-6,
                  head_init_scale: float = 1.):
         super().__init__()
-        self.downsample_layers = nn.ModuleList()  # stem and 3 intermediate downsampling conv layers
-        stem = nn.Sequential(nn.Conv2d(in_chans, dims[0], kernel_size=3, stride=1),  # ----kernel_size=4------------------
+        self.downsample_layers = nn.ModuleList() 
+        stem = nn.Sequential(nn.Conv2d(in_chans, dims[0], kernel_size=3, stride=1),  
                   LayerNorm(dims[0], eps=1e-6, data_format="channels_first"))
         self.downsample_layers.append(stem)
 
-        # 对应stage2-stage4前的3个downsample  ---------------------------------
         for i in range(3):
-            downsample_layer = DownsampleLayers(dims[i], dims[i+1])  # 输入输出通道数 dims[i], dims[i+1]
+            downsample_layer = DownsampleLayers(dims[i], dims[i+1]) 
             self.downsample_layers.append(downsample_layer)
-        self.stages = nn.ModuleList()  # 4 feature resolution stages, each consisting of multiple blocks
+        self.stages = nn.ModuleList()
         dp_rates = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]
         cur = 0
-        # 构建每个stage中堆叠的block
         for i in range(4):
             stage = nn.Sequential(
                 *[Block(dim=dims[i], drop_rate=dp_rates[cur + j], layer_scale_init_value=layer_scale_init_value)
@@ -217,15 +202,13 @@ class ConvNeXt(nn.Module):
         return x
 
 def convnext_tiny(num_classes: int):
-    # https://dl.fbaipublicfiles.com/convnext/convnext_tiny_1k_224_ema.pth
-    model = ConvNeXt(depths=[1, 1, 3, 1],  # [3, 3, 9, 3]
-                     dims= [72, 144, 288,576], # dims= [72, 144, 288,576],# [72, 144, 288,576], # [36, 72, 144, 288], # [96, 192, 384, 768]
+    model = ConvNeXt(depths=[1, 1, 3, 1], 
+                     dims= [72, 144, 288,576], 
                      num_classes=num_classes)
     return model
 
 
 def convnext_small(num_classes: int):
-    # https://dl.fbaipublicfiles.com/convnext/convnext_small_1k_224_ema.pth
     model = ConvNeXt(depths=[3, 3, 27, 3],
                      dims=[96, 192, 384, 768],
                      num_classes=num_classes)
