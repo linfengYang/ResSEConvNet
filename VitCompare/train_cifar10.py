@@ -21,7 +21,6 @@ from models import *
 from utils import progress_bar
 from randomaug import RandAugment
 from models.vit import ViT
-from models.convmixer import ConvMixer
 from models.ConvNext_test import convnext_tiny
 
 from torchvision import transforms
@@ -36,7 +35,7 @@ parser.add_argument('--noaug', action='store_true', help='disable use randomaug'
 parser.add_argument('--noamp', action='store_true', help='disable mixed precision training. for older pytorch versions')
 # parser.add_argument('--nowandb', action='store_true', help='disable wandb')
 parser.add_argument('--mixup', action='store_true', help='add mixup augumentations')
-parser.add_argument('--net', default='mlpmixer')  # swin vit_tiny vit_small cait_small ConvNext_test--------
+parser.add_argument('--net', default='swin')  # swin vit_tiny vit_small cait_small ConvNext--------
 parser.add_argument('--bs', default='16') 
 parser.add_argument('--size', default="64")
 parser.add_argument('--n_epochs', type=int, default='200') 
@@ -130,10 +129,6 @@ elif args.net=='res50':
     net = ResNet50()
 elif args.net=='res101':
     net = ResNet101()
-elif args.net=="convmixer":
-    # from paper, accuracy >96%. you can tune the depth and dim to scale accuracy and speed.
-    print('------------------------welcome convmixer!------------------------')
-    net = ConvMixer(256, 16, kernel_size=4, patch_size=1, n_classes=11) # kernel_size=args.convkernel
 elif args.net=="swin":
     print('------------------------welcome swin!------------------------')
     from models.swin import swin_t
