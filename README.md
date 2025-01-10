@@ -1,1 +1,1 @@
-This is an official implementation for a munuscipt being under review
+This is an official implementation for a manuscript being under review
