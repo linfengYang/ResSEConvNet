@@ -34,12 +34,10 @@ def main(args):
                                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
                                    ])}
 
-    # 实例化训练数据集
     train_dataset = MyDataSet(images_path=train_images_path,
                               images_class=train_images_label,
                               transform=data_transform["train"])
 
-    # 实例化验证数据集
     val_dataset = MyDataSet(images_path=val_images_path,
                             images_class=val_images_label,
                             transform=data_transform["val"])
@@ -66,7 +64,7 @@ def main(args):
     if args.weights != "":
         assert os.path.exists(args.weights), "weights file: '{}' not exist.".format(args.weights)
         weights_dict = torch.load(args.weights, map_location=device)["model"]
-        # 删除有关分类类别的权重
+
         for k in list(weights_dict.keys()):
             if "head" in k:
                 del weights_dict[k]
@@ -74,7 +72,6 @@ def main(args):
 
     if args.freeze_layers:
         for name, para in model.named_parameters():
-            # 除head外，其他权重全部冻结
             if "head" not in name:
                 para.requires_grad_(False)
             else:
@@ -144,14 +141,12 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=8e-4)  
     parser.add_argument('--wd', type=float, default=5e-2)
 
-    # 数据集所在根目录
     parser.add_argument('--data-path', type=str,
                         default="the dataset path/")  
 
-    # 预训练权重路径，如果不想载入就设置为空字符
     parser.add_argument('--weights', type=str, default='',
                         help='initial weights path')
-    # 是否冻结head以外所有权重
+
     parser.add_argument('--freeze-layers', type=bool, default=False)
     parser.add_argument('--device', default='cuda:0', help='device id (i.e. 0 or 0,1 or cpu)')
 
