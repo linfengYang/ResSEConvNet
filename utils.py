@@ -350,7 +350,6 @@ def create_lr_scheduler(optimizer,
 
     return torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=f)
 
-
 def get_params_groups(model: torch.nn.Module, weight_decay: float = 1e-5):
 
     parameter_group_vars = {"decay": {"params": [], "weight_decay": weight_decay},
