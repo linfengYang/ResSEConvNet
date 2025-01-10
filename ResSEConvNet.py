@@ -4,15 +4,7 @@ import torch.nn.functional as F
 
 
 def drop_path(x, drop_prob: float = 0., training: bool = False):
-    """Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks).
 
-    This is the same as the DropConnect impl I created for EfficientNet, etc networks, however,
-    the original name is misleading as 'Drop Connect' is a different form of dropout in a separate paper...
-    See discussion: https://github.com/tensorflow/tpu/issues/494#issuecomment-532968956 ... I've opted for
-    changing the layer and argument names to 'drop path' rather than mix DropConnect as a layer name and use
-    'survival rate' as the argument.
-
-    """
     if drop_prob == 0. or not training:
         return x
     keep_prob = 1 - drop_prob
@@ -35,12 +27,6 @@ class DropPath(nn.Module):
 
 
 class LayerNorm(nn.Module):
-    r""" LayerNorm that supports two data formats: channels_last (default) or channels_first.
-    The ordering of the dimensions in the inputs. channels_last corresponds to inputs with
-    shape (batch_size, height, width, channels) while channels_first corresponds to inputs
-    with shape (batch_size, channels, height, width).
-    """
-
     def __init__(self, normalized_shape, eps=1e-6, data_format="channels_last"):
         super().__init__()
         self.weight = nn.Parameter(torch.ones(normalized_shape), requires_grad=True)
@@ -63,16 +49,6 @@ class LayerNorm(nn.Module):
             return x
 
 class Block(nn.Module):
-    r""" ConvNeXt Block. There are two equivalent implementations:
-    (1) DwConv -> LayerNorm (channels_first) -> 1x1 Conv -> GELU -> 1x1 Conv; all in (N, C, H, W)
-    (2) DwConv -> Permute to (N, H, W, C); LayerNorm (channels_last) -> Linear -> GELU -> Linear; Permute back
-    We use (2) as we find it slightly faster in PyTorch
-
-    Args:
-        dim (int): Number of input channels.
-        drop_rate (float): Stochastic depth rate. Default: 0.0
-        layer_scale_init_value (float): Init value for Layer Scale. Default: 1e-6.
-    """
     def __init__(self, dim, drop_rate=0., layer_scale_init_value=1e-6):
         super().__init__()
         self.conv = nn.Conv2d(dim, dim, kernel_size=3, padding=1)  # depthwise conv
@@ -98,7 +74,6 @@ class DWConv(nn.Module):
         return self.bn(self.act(self.conv1(x))) 
 
 class DownsampleLayers(nn.Module):
-
     def __init__(self, c1, c2):
         super().__init__()
         self.ch1 = nn.Sequential(
@@ -129,7 +104,6 @@ class DownsampleLayers(nn.Module):
             nn.GELU(),
             nn.BatchNorm2d(c2)
         )
-
 
     def forward(self, x):
         a = self.ch1(x)
