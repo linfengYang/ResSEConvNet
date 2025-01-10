@@ -107,7 +107,7 @@ def main(args):
         with open(filename2, 'a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow([val_acc_row])
-        # 写入tensorboard,可在终端输入tensorboard --logdir=./  根据给出的http://localhost:6006/ 查看实时acc及各项指标
+        # tensorboard --logdir=./   http://localhost:6006/  
         tags = ["train_loss", "train_acc", "val_loss", "val_acc", "learning_rate"]
         tb_writer.add_scalar(tags[0], train_loss, epoch)
         tb_writer.add_scalar(tags[1], train_acc, epoch)
